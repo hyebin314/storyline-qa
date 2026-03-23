@@ -1053,7 +1053,7 @@ const issueStatusColor = {
 export default function StoryLineQA() {
   const [tab, setTab] = useState(() => {
     const params = new URLSearchParams(window.location.search);
-    return params.get("tab") || "spec";
+    return params.get("tab") || "dashboard";
   });
   const [projects, setProjects] = useState([{ id:uid(),name:"프로젝트 A",versions:[],specHistory:[] }]);
   const [firebaseLoaded, setFirebaseLoaded] = useState(false);
@@ -1327,7 +1327,13 @@ const filteredIssues = issues.filter(i => {
 
       <div style={{ background:"#FFFFFF",borderBottom:"1px solid #E2E8F0",padding:"0 22px",display:"flex",gap:0 }}>
         {TABS.map(([k,label,count]) => (
-          <button key={k} onClick={() => { setTab(k); setSearchQ(""); }} style={{
+          <button key={k} onClick={() => {
+            setTab(k);
+            setSearchQ("");
+            const params = new URLSearchParams(window.location.search);
+            params.set("tab", k);
+            window.history.replaceState({}, "", `?${params.toString()}`);
+          }} style={{
             padding:"13px 20px",background:"none",border:"none",cursor:"pointer",fontSize:13,fontFamily:"inherit",fontWeight:700,
             color:tab===k?MINT:"#94A3B8",borderBottom:tab===k?`2px solid ${MINT}`:"2px solid transparent",transition:"all .15s",
             display:"flex",alignItems:"center",gap:6 }}>
