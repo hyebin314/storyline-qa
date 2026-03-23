@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps } from "firebase/app";
 import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -10,7 +10,7 @@ const firebaseConfig = {
   messagingSenderId: "267930617309",
   appId: "1:267930617309:web:57199d839aa612ae2f6234",
 };
-const firebaseApp = initializeApp(firebaseConfig);
+const firebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 const db = getFirestore(firebaseApp);
 const DB_DOC = "data/main";
 
