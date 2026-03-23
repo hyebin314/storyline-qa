@@ -1355,6 +1355,8 @@ const filteredIssues = issues.filter(i => {
             setSearchQ("");
             const params = new URLSearchParams(window.location.search);
             params.set("tab", k);
+            if (activeProject) params.set("project", activeProject.id);
+            if (activeVersion) params.set("version", activeVersion.id);
             window.history.replaceState({}, "", `?${params.toString()}`);
           }} style={{
             padding:"13px 20px",background:"none",border:"none",cursor:"pointer",fontSize:13,fontFamily:"inherit",fontWeight:700,
