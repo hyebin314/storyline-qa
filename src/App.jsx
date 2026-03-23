@@ -1055,7 +1055,6 @@ export default function StoryLineQA() {
   const [projects, setProjects] = useState([{ id:uid(),name:"프로젝트 A",versions:[],specHistory:[] }]);
   const [firebaseLoaded, setFirebaseLoaded] = useState(false);
   const [urlParamsApplied, setUrlParamsApplied] = useState(false);
-  const [firebaseLoaded, setFirebaseLoaded] = useState(false);
   const [activeProjectId, setActiveProjectId] = useState(() => {
     return localStorage.getItem("slqa_activeProjectId") || null;
   });
