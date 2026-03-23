@@ -455,6 +455,58 @@ function IssueEditModal({ item, qaItems, onSave, onClose }) {
   );
 }
 
+function TrashTab({ trash, onRestore, onDeleteForever, onEmptyTrash }) {
+  const [confirmEmpty, setConfirmEmpty] = useState(false);
+  const [confirmForever, setConfirmForever] = useState(null);
+  const typeLabel = { qa:"🧪 QA 케이스", issue:"🐞 이슈", spec:"📂 기획서" };
+  const typeColor = { qa:MINT, issue:"#DC2626", spec:"#7C3AED" };
+  return (
+    <div style={{ maxWidth:880,margin:"0 auto" }}>
+      <div style={{ marginBottom:22,display:"flex",justifyContent:"space-between",alignItems:"flex-end" }}>
+        <div>
+          <h2 style={{ margin:0,color:"#0F172A",fontSize:19,fontWeight:800 }}>휴지통</h2>
+          <p style={{ margin:"5px 0 0",color:"#94A3B8",fontSize:13 }}>삭제된 항목을 복구하거나 영구 삭제하세요</p>
+        </div>
+        {trash.length>0 && (
+          <button onClick={() => setConfirmEmpty(true)}
+            style={{ ...S.btn,color:"#DC2626",borderColor:"#FECACA",fontWeight:700 }}>
+            🗑️ 휴지통 비우기
+          </button>
+        )}
+      </div>
+      {confirmEmpty && <ConfirmModal message="휴지통을 비우시겠습니까? 복구할 수 없습니다." onConfirm={() => { onEmptyTrash(); setConfirmEmpty(false); }} onClose={() => setConfirmEmpty(false)} />}
+      {confirmForever && <ConfirmModal message="영구 삭제하시겠습니까? 복구할 수 없습니다." onConfirm={() => { onDeleteForever(confirmForever); setConfirmForever(null); }} onClose={() => setConfirmForever(null)} />}
+      {trash.length===0 ? (
+        <div style={{ textAlign:"center",color:"#94A3B8",padding:"60px 0",border:"2px dashed #E2E8F0",borderRadius:14,fontSize:13 }}>
+          휴지통이 비어있습니다
+        </div>
+      ) : (
+        <div style={{ display:"flex",flexDirection:"column",gap:8 }}>
+          {[...trash].reverse().map(item => (
+            <div key={item.id} style={{ ...S.card,display:"flex",alignItems:"center",gap:12 }}>
+              <span style={{ fontSize:11,padding:"3px 10px",borderRadius:99,fontWeight:700,background:typeColor[item._type]+"18",color:typeColor[item._type],whiteSpace:"nowrap" }}>
+                {typeLabel[item._type]}
+              </span>
+              <div style={{ flex:1,minWidth:0 }}>
+                <div style={{ fontWeight:700,color:"#0F172A",fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>
+                  {item.title||item.name||"제목 없음"}
+                </div>
+                <div style={{ fontSize:11,color:"#94A3B8",marginTop:2 }}>삭제일: {item._deletedAt}</div>
+              </div>
+              <div style={{ display:"flex",gap:6 }}>
+                <button onClick={() => onRestore(item)}
+                  style={{ ...S.btn,color:MINT,borderColor:MINT+"44",fontWeight:700,fontSize:12 }}>↩ 복구</button>
+                <button onClick={() => setConfirmForever(item.id)}
+                  style={{ ...S.btn,color:"#DC2626",borderColor:"#FECACA",fontWeight:700,fontSize:12 }}>영구 삭제</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DashboardTab({ projects, setActiveProjectId, setActiveVersionId, setTab }) {
   return (
     <div style={{ maxWidth:1000,margin:"0 auto" }}>
@@ -1067,7 +1119,7 @@ const issueStatusColor = {
 
 export default function StoryLineQA() {
   const [tab, setTab] = useState("dashboard");
-  const [projects, setProjects] = useState([{ id:uid(),name:"프로젝트 A",versions:[],specHistory:[] }]);
+  const [projects, setProjects] = useState([{ id:uid(),name:"프로젝트 A",versions:[],specHistory:[],trash:[] }]);
   const [firebaseLoaded, setFirebaseLoaded] = useState(false);
   const [urlParamsApplied, setUrlParamsApplied] = useState(false);
   const [activeProjectId, setActiveProjectId] = useState(() => {
@@ -1218,7 +1270,11 @@ export default function StoryLineQA() {
 
   const deleteQA = (id) => setConfirmDelete({ type:"qa",id });
   const deleteIssue = (id) => setConfirmDelete({ type:"issue",id });
-  const deleteMultipleQA = (ids) => updateVersion(activeProject.id, activeVersion.id, v => ({ ...v,qaItems:v.qaItems.filter(q => !ids.includes(q.id)) }));
+  const deleteMultipleQA = (ids) => {
+    const items = activeVersion.qaItems.filter(q => ids.includes(q.id)).map(q => ({ ...q, _type:"qa", _versionId:activeVersion.id, _deletedAt:nowStr() }));
+    updateProject(activeProject.id, p => ({ ...p, trash:[...(p.trash||[]),...items] }));
+    updateVersion(activeProject.id, activeVersion.id, v => ({ ...v,qaItems:v.qaItems.filter(q => !ids.includes(q.id)) }));
+  };
   const reorderQA = (dragId, dropId) => updateVersion(activeProject.id, activeVersion.id, v => {
     const items = [...v.qaItems];
     const dragIdx = items.findIndex(q => q.id===dragId);
@@ -1228,13 +1284,21 @@ export default function StoryLineQA() {
     items.splice(dropIdx, 0, dragged);
     return { ...v, qaItems:items };
   });
-  const deleteMultipleIssues = (ids) => updateVersion(activeProject.id, activeVersion.id, v => ({ ...v,issues:v.issues.filter(i => !ids.includes(i.id)) }));
+  const deleteMultipleIssues = (ids) => {
+    const items = activeVersion.issues.filter(i => ids.includes(i.id)).map(i => ({ ...i, _type:"issue", _versionId:activeVersion.id, _deletedAt:nowStr() }));
+    updateProject(activeProject.id, p => ({ ...p, trash:[...(p.trash||[]),...items] }));
+    updateVersion(activeProject.id, activeVersion.id, v => ({ ...v,issues:v.issues.filter(i => !ids.includes(i.id)) }));
+  };
 
   const handleConfirmDelete = () => {
     if (!confirmDelete) return;
     if (confirmDelete.type==="qa") {
+      const item = activeVersion.qaItems.find(q => q.id===confirmDelete.id);
+      if (item) updateProject(activeProject.id, p => ({ ...p, trash:[...(p.trash||[]), { ...item, _type:"qa", _versionId:activeVersion.id, _deletedAt:nowStr() }] }));
       updateVersion(activeProject.id, activeVersion.id, v => ({ ...v,qaItems:v.qaItems.filter(q => q.id!==confirmDelete.id) }));
     } else if (confirmDelete.type==="issue") {
+      const item = activeVersion.issues.find(i => i.id===confirmDelete.id);
+      if (item) updateProject(activeProject.id, p => ({ ...p, trash:[...(p.trash||[]), { ...item, _type:"issue", _versionId:activeVersion.id, _deletedAt:nowStr() }] }));
       updateVersion(activeProject.id, activeVersion.id, v => ({ ...v,issues:v.issues.filter(i => i.id!==confirmDelete.id) }));
     }
     setConfirmDelete(null);
@@ -1275,7 +1339,10 @@ export default function StoryLineQA() {
     setUpdatingSpecId(null);
   };
 
-  const deleteSpec = (id) => updateProject(activeProject.id, p => ({ ...p,specHistory:p.specHistory.filter(s => s.id!==id) }));
+  const deleteSpec = (id) => {
+    const item = activeProject.specHistory.find(s => s.id===id);
+    if (item) updateProject(activeProject.id, p => ({ ...p, trash:[...(p.trash||[]), { ...item, _type:"spec", _deletedAt:nowStr() }], specHistory:p.specHistory.filter(s => s.id!==id) }));
+  };
   const editSpec = (id, newContent) => updateProject(activeProject.id, p => ({ ...p,specHistory:p.specHistory.map(s => s.id===id?{ ...s,content:newContent,editedAt:nowStr() }:s) }));
 
   const qaItems = activeVersion?.qaItems||[];
@@ -1311,11 +1378,14 @@ const filteredIssues = issues.filter(i => {
   };
 
  const TABS = [
+    const trash = activeProject?.trash||[];
+  const TABS = [
     ["dashboard","🏠  대시보드"],
     ["specHistory","📂  히스토리",specHistory.length],
     ["spec","📋  기획서 입력"],
     ["qa","🧪  QA 시트",qaItems.length],
     ["ims","🐞  이슈 관리",issues.length],
+    ["trash","🗑️  휴지통",trash.length],
   ];
 
   return (
@@ -1378,6 +1448,17 @@ const filteredIssues = issues.filter(i => {
         {tab==="spec" && <SpecTab specText={specText} setSpecText={setSpecText} onGenerate={handleGenerateStart} generating={generating} activeVersion={activeVersion} onAddVersion={() => setVersionModal({ mode:"add" })} />}
         {tab==="specHistory" && <SpecHistoryTab specs={specHistory} onDelete={deleteSpec} onEdit={editSpec} onUpdateQA={handleUpdateQA} updatingSpecId={updatingSpecId} />}
        {tab==="qa" && <QATab qaItems={filteredQA} stats={qaStats} enabledCols={enabledCols} filterStatus={filterStatus} setFilterStatus={setFilterStatus} searchQ={searchQ} setSearchQ={setSearchQ} onEdit={setEditingQA} onStatusChange={handleStatusChange} onDelete={deleteQA} onDeleteMultiple={deleteMultipleQA} onReorder={reorderQA} onAdd={() => setEditingQA({ id:null,title:"",status:"미테스트",testSteps:"",expected:"",memo:"" })} activeVersion={activeVersion} />}
+        {tab==="trash" && <TrashTab
+          trash={trash}
+          onRestore={(item) => {
+            if (item._type==="qa") updateVersion(activeProject.id, item._versionId, v => ({ ...v, qaItems:[...v.qaItems, { ...item }] }));
+            else if (item._type==="issue") updateVersion(activeProject.id, item._versionId, v => ({ ...v, issues:[...v.issues, { ...item }] }));
+            else if (item._type==="spec") updateProject(activeProject.id, p => ({ ...p, specHistory:[...p.specHistory, { ...item }] }));
+            updateProject(activeProject.id, p => ({ ...p, trash:(p.trash||[]).filter(t => t.id!==item.id) }));
+          }}
+          onDeleteForever={(id) => updateProject(activeProject.id, p => ({ ...p, trash:(p.trash||[]).filter(t => t.id!==id) }))}
+          onEmptyTrash={() => updateProject(activeProject.id, p => ({ ...p, trash:[] }))}
+        />}
         {tab==="ims" && <IMSTab issues={filteredIssues} allIssues={issues} filterSev={issueFilterSev} setFilterSev={setIssueFilterSev} searchQ={searchQ} setSearchQ={setSearchQ} onEdit={setEditingIssue} onDelete={deleteIssue} onDeleteMultiple={deleteMultipleIssues} onAdd={() => setShowAddIssue(true)} qaItems={qaItems} activeVersion={activeVersion} />}
       </div>
 
