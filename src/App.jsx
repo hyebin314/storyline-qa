@@ -844,6 +844,9 @@ function QATab({ qaItems, stats, enabledCols, filterStatus, setFilterStatus, sea
                     const dragId = e.dataTransfer.getData("dragId");
                     if (dragId !== item.id) onReorder(dragId, item.id);
                   }}>
+                  <td style={{ ...S.td,textAlign:"center" }}>
+                    <input type="checkbox" checked={checked.includes(item.id)} onChange={() => toggleOne(item.id)} style={{ cursor:"pointer",width:15,height:15 }} />
+                  </td>
                   <td style={{ ...S.td,textAlign:"center",width:40 }}
                     draggable
                     onDragStart={e => { e.dataTransfer.setData("dragId", item.id); e.currentTarget.closest("tr").style.opacity="0.4"; }}
