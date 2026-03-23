@@ -729,7 +729,7 @@ function SpecHistoryTab({ specs, onDelete, onEdit, onUpdateQA, updatingSpecId })
   );
 }
 
-function QATab({ qaItems, stats, enabledCols, filterStatus, setFilterStatus, searchQ, setSearchQ, onEdit, onStatusChange, onDelete, onDeleteMultiple, onMoveUp, onMoveDown, activeVersion }) {
+function QATab({ qaItems, stats, enabledCols, filterStatus, setFilterStatus, searchQ, setSearchQ, onEdit, onStatusChange, onDelete, onDeleteMultiple, onMoveUp, onMoveDown, onAdd, activeVersion }) {
   const [hover, setHover] = useState(null);
   const [checked, setChecked] = useState([]);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
