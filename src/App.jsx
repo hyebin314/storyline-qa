@@ -1090,7 +1090,10 @@ export default function StoryLineQA() {
 
   useEffect(() => {
     loadFromFirebase().then(data => {
-      if (data) setProjects(data);
+      if (data) {
+        setProjects(data);
+        try { localStorage.setItem("slqa_projects", JSON.stringify(data)); } catch {}
+      }
       setFirebaseLoaded(true);
     });
   }, []);
