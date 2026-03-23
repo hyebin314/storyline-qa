@@ -69,7 +69,7 @@ const ALL_COLUMNS = [
   { key:"precondition", label:"사전조건",    required:false },
   { key:"testSteps",    label:"테스트 단계", required:true  },
   { key:"expected",     label:"기대 결과",   required:true  },
-  { key:"note",         label:"비고",        required:false },
+  { key:"note",         label:"실제 결과(비고)",        required:false },
   { key:"memo",         label:"메모",        required:false },
 ];
 const DEFAULT_ENABLED = ALL_COLUMNS.map(c => c.key);
