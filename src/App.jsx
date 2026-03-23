@@ -1218,6 +1218,7 @@ export default function StoryLineQA() {
       updateVersion(activeProject.id, activeVersion.id, v => ({ ...v,issues:v.issues.map(i => i.id===issue.id?issue:i) }));
     } else {
       updateVersion(activeProject.id, activeVersion.id, v => ({ ...v,issues:[...v.issues,{ ...issue,id:uid(),createdAt:new Date().toLocaleDateString("ko-KR"),projectId:activeProject.id,versionId:activeVersion.id }] }));
+    }
     setEditingIssue(null);
     setShowAddIssue(false);
   };
@@ -1365,5 +1366,5 @@ const filteredIssues = issues.filter(i => {
       {(editingIssue||showAddIssue) && <IssueEditModal item={editingIssue} qaItems={qaItems} onSave={saveIssue} onClose={() => { setEditingIssue(null); setShowAddIssue(false); }} />}
       {confirmDelete && <ConfirmModal message="정말 삭제하시겠습니까?" onConfirm={handleConfirmDelete} onClose={() => setConfirmDelete(null)} />}
     </div>
-  );
+  ) ;
 }
