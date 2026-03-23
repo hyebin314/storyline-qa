@@ -1060,10 +1060,7 @@ const issueStatusColor = {
 }
 
 export default function StoryLineQA() {
-  const [tab, setTab] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get("tab") || "dashboard";
-  });
+  const [tab, setTab] = useState("dashboard");
   const [projects, setProjects] = useState([{ id:uid(),name:"프로젝트 A",versions:[],specHistory:[] }]);
   const [firebaseLoaded, setFirebaseLoaded] = useState(false);
   const [urlParamsApplied, setUrlParamsApplied] = useState(false);
@@ -1103,8 +1100,10 @@ export default function StoryLineQA() {
     const params = new URLSearchParams(window.location.search);
     const projectParam = params.get("project");
     const versionParam = params.get("version");
+    const tabParam = params.get("tab");
     if (projectParam) setActiveProjectId(projectParam);
     if (versionParam) setActiveVersionId(versionParam);
+    if (tabParam) setTab(tabParam);
     setUrlParamsApplied(true);
   }, [firebaseLoaded]);
 
