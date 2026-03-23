@@ -729,7 +729,7 @@ function SpecHistoryTab({ specs, onDelete, onEdit, onUpdateQA, updatingSpecId })
   );
 }
 
-function QATab({ qaItems, stats, enabledCols, filterStatus, setFilterStatus, searchQ, setSearchQ, onEdit, onStatusChange, onDelete, onAdd, onDeleteMultiple, activeVersion }) {
+function QATab({ qaItems, stats, enabledCols, filterStatus, setFilterStatus, searchQ, setSearchQ, onEdit, onStatusChange, onDelete, onDeleteMultiple, onMoveUp, onMoveDown, activeVersion }) {
   const [hover, setHover] = useState(null);
   const [checked, setChecked] = useState([]);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
@@ -818,6 +818,7 @@ function QATab({ qaItems, stats, enabledCols, filterStatus, setFilterStatus, sea
                 <th style={{ ...S.th,width:36 }}>
                   <input type="checkbox" checked={allChecked} onChange={toggleAll} style={{ cursor:"pointer",width:15,height:15 }} />
                 </th>
+                <th style={{ ...S.th,width:60 }}>순서</th>
                 <th style={{ ...S.th,width:40 }}>#</th>
                 {visibleCols.map(c => <th key={c.key} style={S.th}>{c.label}</th>)}
                 {/* 담당자 이름을 컬럼 헤더로 */}
@@ -837,6 +838,14 @@ function QATab({ qaItems, stats, enabledCols, filterStatus, setFilterStatus, sea
                   onMouseEnter={() => setHover(item.id)} onMouseLeave={() => setHover(null)}>
                   <td style={{ ...S.td,textAlign:"center" }}>
                     <input type="checkbox" checked={checked.includes(item.id)} onChange={() => toggleOne(item.id)} style={{ cursor:"pointer",width:15,height:15 }} />
+                  </td>
+                  <td style={{ ...S.td,textAlign:"center" }}>
+                    <div style={{ display:"flex",flexDirection:"column",gap:2,alignItems:"center" }}>
+                      <button onClick={() => onMoveUp(item.id)} disabled={idx===0}
+                        style={{ background:"none",border:"none",cursor:idx===0?"not-allowed":"pointer",color:idx===0?"#E2E8F0":"#94A3B8",fontSize:14,padding:"1px 4px",lineHeight:1 }}>▲</button>
+                      <button onClick={() => onMoveDown(item.id)} disabled={idx===qaItems.length-1}
+                        style={{ background:"none",border:"none",cursor:idx===qaItems.length-1?"not-allowed":"pointer",color:idx===qaItems.length-1?"#E2E8F0":"#94A3B8",fontSize:14,padding:"1px 4px",lineHeight:1 }}>▼</button>
+                    </div>
                   </td>
                   <td style={{ ...S.td,color:"#CBD5E1",fontWeight:700 }}>{idx+1}</td>
                   {visibleCols.map(c => (
@@ -1202,6 +1211,20 @@ export default function StoryLineQA() {
   const deleteQA = (id) => setConfirmDelete({ type:"qa",id });
   const deleteIssue = (id) => setConfirmDelete({ type:"issue",id });
   const deleteMultipleQA = (ids) => updateVersion(activeProject.id, activeVersion.id, v => ({ ...v,qaItems:v.qaItems.filter(q => !ids.includes(q.id)) }));
+  const moveQAUp = (id) => updateVersion(activeProject.id, activeVersion.id, v => {
+    const idx = v.qaItems.findIndex(q => q.id===id);
+    if (idx <= 0) return v;
+    const items = [...v.qaItems];
+    [items[idx-1], items[idx]] = [items[idx], items[idx-1]];
+    return { ...v, qaItems:items };
+  });
+  const moveQADown = (id) => updateVersion(activeProject.id, activeVersion.id, v => {
+    const idx = v.qaItems.findIndex(q => q.id===id);
+    if (idx >= v.qaItems.length-1) return v;
+    const items = [...v.qaItems];
+    [items[idx+1], items[idx]] = [items[idx], items[idx+1]];
+    return { ...v, qaItems:items };
+  });
   const deleteMultipleIssues = (ids) => updateVersion(activeProject.id, activeVersion.id, v => ({ ...v,issues:v.issues.filter(i => !ids.includes(i.id)) }));
 
   const handleConfirmDelete = () => {
@@ -1349,7 +1372,7 @@ const filteredIssues = issues.filter(i => {
         {tab==="dashboard" && <DashboardTab projects={projects} setActiveProjectId={setActiveProjectId} setActiveVersionId={setActiveVersionId} setTab={setTab} />}
         {tab==="spec" && <SpecTab specText={specText} setSpecText={setSpecText} onGenerate={handleGenerateStart} generating={generating} activeVersion={activeVersion} onAddVersion={() => setVersionModal({ mode:"add" })} />}
         {tab==="specHistory" && <SpecHistoryTab specs={specHistory} onDelete={deleteSpec} onEdit={editSpec} onUpdateQA={handleUpdateQA} updatingSpecId={updatingSpecId} />}
-       {tab==="qa" && <QATab qaItems={filteredQA} stats={qaStats} enabledCols={enabledCols} filterStatus={filterStatus} setFilterStatus={setFilterStatus} searchQ={searchQ} setSearchQ={setSearchQ} onEdit={setEditingQA} onStatusChange={handleStatusChange} onDelete={deleteQA} onDeleteMultiple={deleteMultipleQA} onAdd={() => setEditingQA({ id:null,title:"",status:"미테스트",testSteps:"",expected:"",memo:"" })} activeVersion={activeVersion} />}
+       {tab==="qa" && <QATab qaItems={filteredQA} stats={qaStats} enabledCols={enabledCols} filterStatus={filterStatus} setFilterStatus={setFilterStatus} searchQ={searchQ} setSearchQ={setSearchQ} onEdit={setEditingQA} onStatusChange={handleStatusChange} onDelete={deleteQA} onDeleteMultiple={deleteMultipleQA} onMoveUp={moveQAUp} onMoveDown={moveQADown} onAdd={() => setEditingQA({ id:null,title:"",status:"미테스트",testSteps:"",expected:"",memo:"" })} activeVersion={activeVersion} />}
         {tab==="ims" && <IMSTab issues={filteredIssues} allIssues={issues} filterSev={issueFilterSev} setFilterSev={setIssueFilterSev} searchQ={searchQ} setSearchQ={setSearchQ} onEdit={setEditingIssue} onDelete={deleteIssue} onDeleteMultiple={deleteMultipleIssues} onAdd={() => setShowAddIssue(true)} qaItems={qaItems} activeVersion={activeVersion} />}
       </div>
 
