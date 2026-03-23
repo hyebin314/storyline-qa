@@ -1377,7 +1377,6 @@ const filteredIssues = issues.filter(i => {
     pct:qaItems.length?Math.round(qaItems.filter(q => q.status==="성공").length/qaItems.length*100):0,
   };
 
- const TABS = [
     const trash = activeProject?.trash||[];
   const TABS = [
     ["dashboard","🏠  대시보드"],
