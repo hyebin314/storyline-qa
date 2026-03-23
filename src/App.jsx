@@ -39,7 +39,7 @@ function FontLoader() {
 }
 
 async function generateQAFromSpec(specText, versionInfo, enabledColumns) {
-  const apiKey = import.meta.env.VITE_GROQ_API_KEY || "";
+  const apiKey = "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";
   const cols = enabledColumns.filter(c => c !== "platform" && c !== "assignee" && c !== "memo");
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
