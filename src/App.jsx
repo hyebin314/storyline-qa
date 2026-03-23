@@ -432,6 +432,20 @@ function IssueEditModal({ item, qaItems, onSave, onClose }) {
             )}
           </div>
         </div>
+        <div>
+          <label style={S.label}>QA 시트 링크</label>
+          <div style={{ display:"flex",gap:8,alignItems:"center" }}>
+            <input readOnly value={`${window.location.origin}?tab=qa&project=${form.projectId||""}&version=${form.versionId||""}`}
+              style={{ ...S.input,flex:1,background:"#F8FAFC",color:"#94A3B8",fontSize:12 }} />
+            <button onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}?tab=qa&project=${form.projectId||""}&version=${form.versionId||""}`);
+                alert("QA 시트 링크가 복사되었습니다!");
+              }}
+              style={{ ...S.primaryBtn,whiteSpace:"nowrap",padding:"9px 16px" }}>
+              🔗 복사
+            </button>
+          </div>
+        </div>
       </div>
       <div style={{ display:"flex",gap:8,marginTop:20 }}>
         <button onClick={() => onSave(form)} style={S.primaryBtn}>저장</button>
@@ -1040,6 +1054,8 @@ export default function StoryLineQA() {
   const [tab, setTab] = useState("spec");
   const [projects, setProjects] = useState([{ id:uid(),name:"프로젝트 A",versions:[],specHistory:[] }]);
   const [firebaseLoaded, setFirebaseLoaded] = useState(false);
+  const [urlParamsApplied, setUrlParamsApplied] = useState(false);
+  const [firebaseLoaded, setFirebaseLoaded] = useState(false);
   const [activeProjectId, setActiveProjectId] = useState(() => {
     return localStorage.getItem("slqa_activeProjectId") || null;
   });
@@ -1070,6 +1086,18 @@ export default function StoryLineQA() {
       setFirebaseLoaded(true);
     });
   }, []);
+
+  useEffect(() => {
+    if (!firebaseLoaded || urlParamsApplied) return;
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get("tab");
+    const projectParam = params.get("project");
+    const versionParam = params.get("version");
+    if (tabParam) setTab(tabParam);
+    if (projectParam) setActiveProjectId(projectParam);
+    if (versionParam) setActiveVersionId(versionParam);
+    setUrlParamsApplied(true);
+  }, [firebaseLoaded]);
 
   useEffect(() => {
     if (!firebaseLoaded) return;
@@ -1190,8 +1218,7 @@ export default function StoryLineQA() {
     if (issue.id) {
       updateVersion(activeProject.id, activeVersion.id, v => ({ ...v,issues:v.issues.map(i => i.id===issue.id?issue:i) }));
     } else {
-      updateVersion(activeProject.id, activeVersion.id, v => ({ ...v,issues:[...v.issues,{ ...issue,id:uid(),createdAt:new Date().toLocaleDateString("ko-KR") }] }));
-    }
+      updateVersion(activeProject.id, activeVersion.id, v => ({ ...v,issues:[...v.issues,{ ...issue,id:uid(),createdAt:new Date().toLocaleDateString("ko-KR"),projectId:activeProject.id,versionId:activeVersion.id }] }));
     setEditingIssue(null);
     setShowAddIssue(false);
   };
