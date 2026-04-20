@@ -40,7 +40,7 @@ ${userMsg}
         "X-Title": "QA Forge",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.0-flash-exp:free",
+        model: "mistralai/mistral-7b-instruct:free",
         max_tokens: 4096,
         messages: [
           { role: "system", content: "You are a QA engineer. Return ONLY a valid JSON array. No markdown, no explanation." },
