@@ -7,6 +7,8 @@ export default async function handler(req, res) {
     const systemMsg = req.body.messages.find(m => m.role === "system")?.content || "";
     const userMsg = req.body.messages.filter(m => m.role !== "system");
 
+    console.log("=== USER MESSAGE ===", JSON.stringify(userMsg));
+
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -23,7 +25,10 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
+    console.log("=== CLAUDE RAW RESPONSE ===", JSON.stringify(data));
+
     const text = data.content?.[0]?.text || "[]";
+    console.log("=== EXTRACTED TEXT ===", text);
 
     const converted = {
       choices: [{ message: { content: text } }]
@@ -31,6 +36,7 @@ export default async function handler(req, res) {
 
     res.status(200).json(converted);
   } catch (error) {
+    console.log("=== ERROR ===", error.message);
     res.status(500).json({ error: error.message });
   }
 }
