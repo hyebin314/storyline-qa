@@ -924,9 +924,9 @@ function QATab({ qaItems, stats, enabledCols, filterStatus, setFilterStatus, sea
                   {visibleCols.map(c => (
                     <td key={c.key} style={{ ...S.td,maxWidth:c.key==="testSteps"?200:160 }}>
                       {c.key==="testSteps"
-                        ? <div style={{ whiteSpace:"pre-line",color:"#94A3B8",fontSize:12,lineHeight:1.6 }}>
-                            {(item[c.key]||"").split("\n").slice(0,3).join("\n")}{(item[c.key]||"").split("\n").length>3?"\n…":""}
-                          </div>
+  ? <div style={{ whiteSpace:"pre-line",color:"#94A3B8",fontSize:12,lineHeight:1.6 }}>
+      {(() => { const lines = String(item[c.key]||"").split("\n"); return lines.slice(0,3).join("\n") + (lines.length>3?"\n…":""); })()}
+    </div>
                         : c.key==="memo"
                           ? <input value={item.memo||""} onChange={e => onStatusChange(item.id, null, { memo:e.target.value })}
                               style={{ ...S.input,padding:"4px 8px",fontSize:12,background:"transparent",border:"1px solid transparent",minWidth:80 }}
