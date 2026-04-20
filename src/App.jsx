@@ -55,7 +55,7 @@ async function generateQAFromSpec(specText, versionInfo, enabledColumns) {
   });
   if (!res.ok) { const e = await res.json(); throw new Error(`HTTP ${res.status}: ${JSON.stringify(e)}`); }
   const data = await res.json();
-  const raw = data.content?.[0]?.text || "[]";
+  const raw = data.choices?.[0]?.message?.content || "[]";
   const jsonStr = raw.includes('[') ? raw.slice(raw.indexOf('['), raw.lastIndexOf(']') + 1) : "[]";
   return JSON.parse(jsonStr);
 }
