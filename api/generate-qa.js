@@ -4,6 +4,9 @@ export default async function handler(req, res) {
   }
 
   try {
+    const systemMsg = req.body.messages.find(m => m.role === "system")?.content || "";
+    const userMsg = req.body.messages.filter(m => m.role !== "system");
+
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -14,23 +17,16 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
         max_tokens: 4096,
-        system: req.body.messages.find(m => m.role === "system")?.content || "",
-        messages: req.body.messages.filter(m => m.role !== "system"),
+        system: systemMsg + "\n\nYou MUST respond with ONLY a valid JSON array. No explanation, no markdown, no code block. Start your response with [ and end with ].",
+        messages: userMsg,
       }),
     });
 
     const data = await response.json();
-
-    // Anthropic 응답을 Groq 형식으로 변환해서 반환
     const text = data.content?.[0]?.text || "[]";
+
     const converted = {
-      choices: [
-        {
-          message: {
-            content: text
-          }
-        }
-      ]
+      choices: [{ message: { content: text } }]
     };
 
     res.status(200).json(converted);
