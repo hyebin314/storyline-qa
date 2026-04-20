@@ -44,6 +44,8 @@ async function generateQAFromSpec(specText, versionInfo, enabledColumns) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
+      model: "llama-3.3-70b-versatile",
+      max_tokens: 3000,
       messages: [
         {
           role: "system",
