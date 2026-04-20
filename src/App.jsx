@@ -39,28 +39,26 @@ function FontLoader() {
 }
 
 async function generateQAFromSpec(specText, versionInfo, enabledColumns) {
-  const apiKey = "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";
   const cols = enabledColumns.filter(c => c !== "platform" && c !== "assignee" && c !== "memo");
-  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+  const res = await fetch("/api/generate-qa", {
     method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
-      max_tokens: 3000,
       messages: [
         {
           role: "system",
-          content: `You are a QA engineer. Generate QA test cases in Korean from a product spec.\nReturn ONLY a valid JSON array, no markdown, no explanation, no extra text.\nIMPORTANT: All values must be written in Korean only. Do NOT use Japanese, English, or any other language.\nEach item must have: ${cols.join(", ")}, "id" (string), "status": "미테스트".\ntestSteps: numbered lines separated by \\n. Generate 8-12 test cases.`
+          content: `You are a QA engineer. Generate QA test cases in Korean from a product spec.\nReturn ONLY a valid JSON array, no markdown, no explanation, no extra text.\nIMPORTANT: All values must be written in Korean only. Do NOT use Japanese, English, or any other language.\nEach item must have: ${cols.join(",")}`,
         },
         { role: "user", content: `버전: ${JSON.stringify(versionInfo)}\n기획서:\n${specText}\n\nJSON 배열만 반환하세요.` }
       ]
-    })
+    }),
   });
   if (!res.ok) { const e = await res.json(); throw new Error(`HTTP ${res.status}: ${JSON.stringify(e)}`); }
   const data = await res.json();
-  const raw = data.choices?.[0]?.message?.content || "[]";
+  const raw = data.content?.[0]?.text || "[]";
   const jsonStr = raw.includes('[') ? raw.slice(raw.indexOf('['), raw.lastIndexOf(']') + 1) : "[]";
   return JSON.parse(jsonStr);
+}
 }
 
 const ALL_COLUMNS = [
