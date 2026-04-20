@@ -59,7 +59,23 @@ async function generateQAFromSpec(specText, versionInfo, enabledColumns) {
   const data = await res.json();
   const raw = data.choices?.[0]?.message?.content || "[]";
   const jsonStr = raw.includes('[') ? raw.slice(raw.indexOf('['), raw.lastIndexOf(']') + 1) : "[]";
-  return JSON.parse(jsonStr);
+  const parsed = JSON.parse(jsonStr);
+
+// 모든 필드값을 문자열로 강제 변환
+return parsed.map(item => {
+  const obj = {};
+  for (const key in item) {
+    const val = item[key];
+    if (Array.isArray(val)) {
+      obj[key] = val.join("\n");
+    } else if (typeof val === "object" && val !== null) {
+      obj[key] = JSON.stringify(val);
+    } else {
+      obj[key] = String(val ?? "");
+    }
+  }
+  return obj;
+});
 }
 
 const ALL_COLUMNS = [
