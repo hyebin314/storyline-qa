@@ -7,8 +7,6 @@ export default async function handler(req, res) {
     const systemMsg = req.body.messages.find(m => m.role === "system")?.content || "";
     const userMsg = req.body.messages.find(m => m.role === "user")?.content || "";
 
-    console.log("=== USER MSG ===", userMsg);
-
     const prompt = `${systemMsg}
 
 ${userMsg}
@@ -33,29 +31,28 @@ ${userMsg}
 - 최소 10개 이상 생성
 - 모든 값은 한국어로 작성`;
 
-    console.log("=== PROMPT ===", prompt.slice(0, 200));
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.1,
-            maxOutputTokens: 4096,
-          },
-        }),
-      }
-    );
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "HTTP-Referer": "https://storyline-qa.vercel.app",
+        "X-Title": "QA Forge",
+      },
+      body: JSON.stringify({
+        model: "meta-llama/llama-3.3-70b-instruct:free",
+        max_tokens: 4096,
+        messages: [
+          { role: "system", content: "You are a QA engineer. Return ONLY a valid JSON array. No markdown, no explanation." },
+          { role: "user", content: prompt }
+        ],
+      }),
+    });
 
     const data = await response.json();
-    console.log("=== GEMINI RESPONSE ===", JSON.stringify(data).slice(0, 500));
+    console.log("=== OPENROUTER RESPONSE ===", JSON.stringify(data).slice(0, 500));
 
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
-    console.log("=== EXTRACTED TEXT ===", text.slice(0, 300));
-
+    const text = data.choices?.[0]?.message?.content || "[]";
     const cleaned = text.replace(/```json|```/g, "").trim();
     const jsonStr = cleaned.includes("[")
       ? cleaned.slice(cleaned.indexOf("["), cleaned.lastIndexOf("]") + 1)
