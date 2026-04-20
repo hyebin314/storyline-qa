@@ -59,7 +59,6 @@ async function generateQAFromSpec(specText, versionInfo, enabledColumns) {
   const jsonStr = raw.includes('[') ? raw.slice(raw.indexOf('['), raw.lastIndexOf(']') + 1) : "[]";
   return JSON.parse(jsonStr);
 }
-}
 
 const ALL_COLUMNS = [
   { key:"title",        label:"제목",        required:true  },
